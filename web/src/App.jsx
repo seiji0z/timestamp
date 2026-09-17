@@ -1,80 +1,97 @@
 import React, { useState, useEffect } from 'react'
-import { Film, Info } from 'lucide-react'
+import { Film } from 'lucide-react'
 import ImageView from './components/ImageView'
 import Timestamp from './components/Timestamp'
 import GuessInput from './components/GuessInput'
 import ShareStats from './components/ShareStats'
 import Modal from './components/Modal'
-import { getTodayGame, submitGuess } from './services/api'
+import { getTodayGame, submitGuess, revealAnswer, getTmdbPoster } from './services/api'
 import { useGameLogic } from './hooks/useGameLogic'
 
-function App() {
+export default function App() {
   const [gameInfo, setGameInfo] = useState(null)
-  const [isLoadingGame, setIsLoadingGame] = useState(true)
+  const [loading, setLoading] = useState(true)
   const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  
+  // Game state stored in localStorage
+  const { guesses, gameState, addGuess, resetGame } = useGameLogic()
 
-  const { guesses, gameState, addGuess } = useGameLogic(gameInfo?.game_id)
+  // Answer state for game over
+  const [answerData, setAnswerData] = useState(null)
+  const [answerPoster, setAnswerPoster] = useState(null)
 
+  // Fetch today's game on mount
   useEffect(() => {
     async function loadGame() {
-      const data = await getTodayGame()
-      if (data) {
-        setGameInfo(data)
-        // Auto-show modal if game is over
-        const stored = localStorage.getItem(`framedle_${data.game_id}`)
-        if (stored) {
-          const parsed = JSON.parse(stored)
-          if (parsed.gameState !== 'PLAYING') {
-            setShowModal(true)
+      const info = await getTodayGame()
+      if (info) {
+        setGameInfo(info)
+        // If not playing (won/lost), show the end modal immediately on load
+        if (gameState !== 'PLAYING') {
+          setShowModal(true)
+        } else {
+          // Initialize to middle of the movie if no guesses yet
+          if (guesses.length === 0) {
+            setCurrentTimestamp(Math.floor(info.runtime_seconds / 2))
           }
         }
       }
-      setIsLoadingGame(false)
+      setLoading(false)
     }
     loadGame()
-  }, [])
+  }, [gameState, guesses.length])
 
-  // Automatically show the modal when game ends
+  // Fetch answer when game is over
   useEffect(() => {
-    if (gameState !== 'PLAYING') {
-      setTimeout(() => setShowModal(true), 1500)
+    if (gameState !== 'PLAYING' && !answerData) {
+      revealAnswer().then(data => {
+        if (data) {
+          setAnswerData(data)
+          getTmdbPoster(data.title, data.release_year).then(url => {
+            if (url) setAnswerPoster(url)
+          })
+        }
+      })
     }
-  }, [gameState])
+  }, [gameState, answerData])
 
   const handleGuessSubmit = async (guessTitle) => {
-    if (!gameInfo || gameState !== 'PLAYING') return
-
     setIsSubmitting(true)
-    const isCorrect = await submitGuess(gameInfo.game_id, guessTitle)
+    const isCorrect = await submitGuess(guessTitle)
     setIsSubmitting(false)
 
     addGuess(guessTitle, isCorrect)
+    
+    // Automatically show modal if game ends after this guess
+    if (isCorrect || guesses.length === 4) { // 4 because state hasn't updated to 5 yet
+      setTimeout(() => setShowModal(true), 1500)
+    }
   }
 
-  if (isLoadingGame) {
+  if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Film className="h-12 w-12 text-primary animate-pulse" />
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
   }
 
   if (!gameInfo) {
     return (
-      <div className="flex flex-col min-h-screen items-center justify-center p-4 text-center">
-        <h1 className="text-3xl font-bold mb-2">No Game Today</h1>
-        <p className="text-white/60">Please check back later!</p>
+      <div className="min-h-screen bg-background flex items-center justify-center text-white/50">
+        No game available today.
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background relative selection:bg-primary/30">
+    <div className="min-h-screen bg-background flex flex-col font-sans">
+      
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <div className="flex items-center space-x-2">
+      <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
+        <div className="flex items-center gap-3">
           <Film className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold tracking-tight">Framedle</h1>
         </div>
@@ -82,7 +99,9 @@ function App() {
           onClick={() => setShowModal(true)}
           className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors"
         >
-          <Info className="h-5 w-5" />
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </button>
       </header>
 
@@ -136,16 +155,29 @@ function App() {
         title={gameState === 'PLAYING' ? 'How to Play' : (gameState === 'WON' ? 'You Won!' : 'Game Over')}
       >
         {gameState === 'PLAYING' ? (
-          <div className="space-y-4">
-            <p>Guess the movie from the frames.</p>
-            <ul className="list-disc pl-5 space-y-2 text-white/70">
-              <li>Enter a timestamp to view a specific frame from the movie.</li>
-              <li>You have 5 guesses to get the correct title.</li>
-              <li>Use your movie knowledge and detective skills!</li>
-            </ul>
+          <div className="space-y-4 text-white/80 leading-relaxed">
+            <p>1. Type a timestamp (HH:MM:SS) to jump around the movie.</p>
+            <p>2. Look at the frame and try to guess the movie title.</p>
+            <p>3. You have 5 guesses. Use the autocomplete to find valid movies.</p>
+            <p className="text-sm text-white/50 mt-4 border-t border-white/10 pt-4">
+              * A new movie is automatically selected every day at Midnight UTC.
+            </p>
           </div>
         ) : (
           <div className="space-y-6 text-center pt-2">
+            
+            {/* The Answer Reveal */}
+            {answerData && (
+              <div className="flex flex-col items-center justify-center mb-6 p-4 bg-surface/50 rounded-xl border border-white/5">
+                <p className="text-sm text-white/50 mb-3 uppercase tracking-widest">Today's Movie</p>
+                {answerPoster && (
+                  <img src={answerPoster} alt={answerData.title} className="w-32 h-48 object-cover rounded shadow-lg mb-4" />
+                )}
+                <h2 className="text-2xl font-bold text-white">{answerData.title}</h2>
+                <p className="text-white/50">{answerData.release_year}</p>
+              </div>
+            )}
+
             <p className="text-lg">
               {gameState === 'WON'
                 ? `You guessed the movie in ${guesses.length} ${guesses.length === 1 ? 'try' : 'tries'}!`
@@ -159,5 +191,3 @@ function App() {
     </div>
   )
 }
-
-export default App
