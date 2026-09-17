@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Clock } from 'lucide-react'
+import { Clock, Info } from 'lucide-react'
 
 export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds, maxSeconds }) {
   const [inputValue, setInputValue] = useState('')
@@ -10,7 +10,7 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
     const h = Math.floor(valueSeconds / 3600).toString().padStart(2, '0')
     const m = Math.floor((valueSeconds % 3600) / 60).toString().padStart(2, '0')
     const s = (valueSeconds % 60).toString().padStart(2, '0')
-    
+
     // Only show hours if it's > 0 to keep it clean, but for movies standard is HH:MM:SS
     setInputValue(`${h}:${m}:${s}`)
   }, [valueSeconds])
@@ -29,12 +29,12 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
     } else if (parts.length === 1) {
       seconds = parts[0] // user just typed seconds
     }
-    
+
     // Clamp to maxSeconds if provided
     if (maxSeconds !== undefined && seconds > maxSeconds) {
       seconds = maxSeconds
     }
-    
+
     // Clamp to minSeconds if provided
     if (minSeconds !== undefined && seconds < minSeconds) {
       seconds = minSeconds
@@ -53,19 +53,25 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
 
   return (
     <div className="relative w-full max-w-sm mx-auto">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Clock className="h-5 w-5 text-white/40" />
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <Clock className="h-5 w-5 text-white/40" />
+        </div>
+        <input
+          type="text"
+          disabled={disabled}
+          className="w-full bg-surface/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          placeholder="HH:MM:SS (e.g. 01:15:30)"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+        />
       </div>
-      <input
-        type="text"
-        disabled={disabled}
-        className="w-full bg-surface/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        placeholder="HH:MM:SS (e.g. 01:15:30)"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-      />
+      <div className="mt-3 flex items-start sm:items-center justify-center gap-1.5 text-white/40 text-[10px] sm:text-xs font-medium">
+        <Info className="w-3.5 h-3.5 shrink-0" />
+        <span>Timestamps are approximate and may not reflect exact timing.</span>
+      </div>
     </div>
   )
 }

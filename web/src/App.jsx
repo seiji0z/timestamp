@@ -14,7 +14,7 @@ export default function App() {
   const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
-  
+
   // Game state stored in localStorage
   const { guesses, gameState, addGuess, resetGame } = useGameLogic()
 
@@ -63,7 +63,7 @@ export default function App() {
     setIsSubmitting(false)
 
     addGuess(guessTitle, isCorrect)
-    
+
     // Automatically show modal if game ends after this guess
     if (isCorrect || guesses.length === 4) { // 4 because state hasn't updated to 5 yet
       setTimeout(() => setShowModal(true), 1500)
@@ -88,7 +88,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans">
-      
+
       {/* Header */}
       <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
@@ -126,6 +126,7 @@ export default function App() {
           <ImageView
             r2FolderName={gameInfo.r2_folder_name}
             timestampSeconds={currentTimestamp}
+            gameInfo={gameInfo}
           />
         </div>
 
@@ -159,13 +160,14 @@ export default function App() {
             <p>1. Type a timestamp (HH:MM:SS) to jump around the movie.</p>
             <p>2. Look at the frame and try to guess the movie title.</p>
             <p>3. You have 5 guesses. Use the autocomplete to find valid movies.</p>
+            <p>NOTE: Timestamps may not be exact due to different cuts and skipped credits.</p>
             <p className="text-sm text-white/50 mt-4 border-t border-white/10 pt-4">
               * A new movie is automatically selected every day at Midnight UTC.
             </p>
           </div>
         ) : (
           <div className="space-y-6 text-center pt-2">
-            
+
             {/* The Answer Reveal */}
             {answerData && (
               <div className="flex flex-col items-center justify-center mb-6 p-4 bg-surface/50 rounded-xl border border-white/5">

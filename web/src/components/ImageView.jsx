@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Image as ImageIcon } from 'lucide-react'
 
-export default function ImageView({ r2FolderName, timestampSeconds }) {
+export default function ImageView({ r2FolderName, timestampSeconds, gameInfo }) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [imageUrl, setImageUrl] = useState(null)
@@ -10,19 +10,24 @@ export default function ImageView({ r2FolderName, timestampSeconds }) {
   const cdnBase = import.meta.env.VITE_CDN_URL || 'https://cdn.example.com' // Fallback for dev
 
   useEffect(() => {
-    if (r2FolderName && timestampSeconds !== undefined) {
+    if (r2FolderName && timestampSeconds !== undefined && gameInfo) {
       setIsLoading(true)
       setHasError(false)
 
-      // Calculate which frame to fetch based on our scraper interval (e.g. 5 seconds)
-      // Since the scraper saves frame_0, frame_5, frame_10, we round down to nearest 5
-      const interval = 5
-      const frameIndex = Math.floor(timestampSeconds / interval) * interval
+      const { runtime_seconds, frame_count, frame_interval } = gameInfo
 
-      const newUrl = `${cdnBase}/movies/${r2FolderName}/frame_${frameIndex}.jpg`
+      // Calculate the exact theoretical frame index for the requested time
+      const ratio = frame_count / runtime_seconds
+      const exactFrame = timestampSeconds * ratio
+
+      // We must round this to the nearest interval that was actually saved by the backend
+      const interval = frame_interval || 50
+      const roundedFrameIndex = Math.round(exactFrame / interval) * interval
+
+      const newUrl = `${cdnBase}/movies/${r2FolderName}/frame_${roundedFrameIndex}.jpg`
       setImageUrl(newUrl)
     }
-  }, [r2FolderName, timestampSeconds, cdnBase])
+  }, [r2FolderName, timestampSeconds, cdnBase, gameInfo])
 
   return (
     <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden shadow-2xl border border-white/5 flex items-center justify-center">

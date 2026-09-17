@@ -37,7 +37,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
     const matches = catalog
       .filter(m => m.title.toLowerCase().includes(lowerQuery))
       .slice(0, 5) // Show top 5 matches
-    
+
     setSuggestions(matches)
 
     // Fetch posters for matches if not cached
@@ -63,9 +63,8 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
   const handleSelect = (movie) => {
     setQuery(movie.title)
     setShowDropdown(false)
-    // Optional: auto-submit when they click an option
-    // onSubmit(movie.title)
-    // setQuery('')
+    onSubmit(movie.title)
+    setQuery('')
   }
 
   return (
@@ -97,7 +96,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
       {showDropdown && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 divide-y divide-white/5">
           {suggestions.map(movie => (
-            <div 
+            <div
               key={movie.id}
               onClick={() => handleSelect(movie)}
               className="flex items-center gap-4 p-3 hover:bg-white/10 cursor-pointer transition-colors"

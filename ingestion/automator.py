@@ -2,12 +2,34 @@ import os
 import random
 import shutil
 import boto3
+import requests
+import urllib.parse
 from datetime import date, timedelta
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
 from scraper import scrape_movie_frames
 from uploader import upload_frames_to_r2
+
+def get_real_runtime(title, year):
+    """Fetch the actual movie runtime in seconds from TMDB."""
+    api_key = os.environ.get("VITE_TMDB_API_KEY") 
+    if not api_key:
+        return 7200 # Fallback to 2 hours
+    try:
+        query = urllib.parse.quote(title)
+        res = requests.get(f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}&primary_release_year={year}")
+        data = res.json()
+        if data.get('results'):
+            movie_id = data['results'][0]['id']
+            # Fetch details for runtime
+            details_res = requests.get(f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={api_key}")
+            details = details_res.json()
+            if details.get('runtime'):
+                return details['runtime'] * 60 # Convert minutes to seconds
+    except Exception as e:
+        print(f"Error fetching runtime from TMDB: {e}")
+    return 7200
 
 def get_supabase_client() -> Client:
     url = os.environ.get("SUPABASE_URL")
@@ -72,7 +94,7 @@ def delete_yesterdays_frames(supabase, r2_client, bucket_name):
 
 def schedule_tomorrows_game(supabase, bucket_name):
     print("\nScheduling tomorrow's game...")
-    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    tomorrow = (date.today() + timedelta(days=0)).isoformat()
     
     # Check if tomorrow already exists
     existing = supabase.table('daily_games').select('id').eq('game_date', tomorrow).execute()
@@ -112,15 +134,27 @@ def schedule_tomorrows_game(supabase, bucket_name):
         print(f"Scraping frames from: {selected_movie['url']}")
         max_timestamp = scrape_movie_frames(selected_movie['url'], temp_workspace, skip_interval=50)
         
-        # Update the actual runtime in the database
-        print(f"Updating movie runtime to {max_timestamp} seconds.")
-        supabase.table('movies').update({'runtime_seconds': max_timestamp}).eq('id', selected_movie['id']).execute()
+        # Get REAL runtime from TMDB
+        real_runtime = get_real_runtime(selected_movie['title'], selected_movie['release_year'])
+        
+        # Update the database with real time AND frame metrics
+        print(f"Updating movie: real runtime {real_runtime}s, frame_count {max_timestamp}.")
+        supabase.table('movies').update({
+            'runtime_seconds': real_runtime,
+            'frame_count': max_timestamp,
+            'frame_interval': 50
+        }).eq('id', selected_movie['id']).execute()
         
         # Delete spoiler frames (first 5 mins, last 10 mins) locally before uploading to R2
+        # Note: We must convert the real time (300 seconds) to the frame index to delete!
+        ratio = max_timestamp / real_runtime if real_runtime > 0 else 1
+        safe_start_frame = int(300 * ratio)
+        safe_end_frame = int((real_runtime - 600) * ratio)
+        
         for f in os.listdir(temp_workspace):
             if f.startswith('frame_') and f.endswith('.jpg'):
                 ts = int(f.replace('frame_', '').replace('.jpg', ''))
-                if ts < 300 or ts > (max_timestamp - 600):
+                if ts < safe_start_frame or ts > safe_end_frame:
                     os.remove(os.path.join(temp_workspace, f))
         
         print(f"Uploading frames to R2 folder: {selected_movie['r2_folder_name']}")
@@ -139,10 +173,11 @@ def schedule_tomorrows_game(supabase, bucket_name):
             shutil.rmtree(temp_workspace)
 
 def main():
-    load_dotenv()
+    # Load environment variables
+    load_dotenv('.env')
     supabase = get_supabase_client()
     r2_client = get_r2_client()
-    bucket_name = os.environ.get("CLOUDFLARE_R2_BUCKET_NAME")
+    bucket_name = os.environ.get("CLOUDFLARE_R2_BUCKET_NAME") or "framedle-frames"
     
     if not bucket_name:
         raise ValueError("Missing CLOUDFLARE_R2_BUCKET_NAME")
