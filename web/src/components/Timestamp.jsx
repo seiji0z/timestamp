@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Clock } from 'lucide-react'
 
-export default function Timestamp({ valueSeconds, onChange, disabled, maxSeconds }) {
+export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds, maxSeconds }) {
   const [inputValue, setInputValue] = useState('')
 
   // Convert seconds to HH:MM:SS for display
@@ -33,6 +33,11 @@ export default function Timestamp({ valueSeconds, onChange, disabled, maxSeconds
     // Clamp to maxSeconds if provided
     if (maxSeconds !== undefined && seconds > maxSeconds) {
       seconds = maxSeconds
+    }
+    
+    // Clamp to minSeconds if provided
+    if (minSeconds !== undefined && seconds < minSeconds) {
+      seconds = minSeconds
     }
 
     if (onChange && seconds !== valueSeconds) {

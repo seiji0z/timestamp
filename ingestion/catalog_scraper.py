@@ -43,11 +43,12 @@ def scrape_catalog():
             # Format the title (e.g., 'the-a-team' -> 'The A Team')
             title = slug.replace('-', ' ').title()
             
+            import uuid
             movies.append({
                 'title': title,
                 'release_year': int(year_str),
                 'runtime_seconds': 7200, # Default to 2 hours for now
-                'r2_folder_name': f"{slug}-{year_str}",
+                'r2_folder_name': str(uuid.uuid4()), # Use UUID so players can't cheat by looking at the URL
                 'url': href
             })
 

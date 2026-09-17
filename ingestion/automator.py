@@ -116,6 +116,13 @@ def schedule_tomorrows_game(supabase, bucket_name):
         print(f"Updating movie runtime to {max_timestamp} seconds.")
         supabase.table('movies').update({'runtime_seconds': max_timestamp}).eq('id', selected_movie['id']).execute()
         
+        # Delete spoiler frames (first 5 mins, last 10 mins) locally before uploading to R2
+        for f in os.listdir(temp_workspace):
+            if f.startswith('frame_') and f.endswith('.jpg'):
+                ts = int(f.replace('frame_', '').replace('.jpg', ''))
+                if ts < 300 or ts > (max_timestamp - 600):
+                    os.remove(os.path.join(temp_workspace, f))
+        
         print(f"Uploading frames to R2 folder: {selected_movie['r2_folder_name']}")
         upload_frames_to_r2(temp_workspace, bucket_name, selected_movie['r2_folder_name'])
         

@@ -39,12 +39,21 @@ def scrape_movie_frames(url, output_dir, skip_interval=5):
         soup = BeautifulSoup(response.text, 'html.parser')
 
         # Find all images
-        images = soup.find_all('img')
+        # Restrict to the main content area to avoid other divs
+        main_content = soup.find('article') or soup.find('div', class_='entry-content') or soup
+        images = main_content.find_all('img')
         
         for img in images:
             img_src = img.get('src') or img.get('data-src')
             if not img_src:
                 continue
+                
+            # Filter out gravatars, tracking pixels, etc. Only keep actual frames/posters.
+            if 'b-cdn.net' not in img_src and 'movie-screencaps.com' not in img_src:
+                continue
+                
+            if '?class=thumbnail' in img_src:
+                img_src = img_src.split('?class=thumbnail')[0]
                 
             # Filter out non-gallery images (logos, banners, etc)
             if 'logo' in img_src.lower() or 'banner' in img_src.lower() or 'avatar' in img_src.lower():

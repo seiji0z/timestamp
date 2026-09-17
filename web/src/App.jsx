@@ -78,7 +78,7 @@ function App() {
           <Film className="h-6 w-6 text-primary" />
           <h1 className="text-xl font-bold tracking-tight">Framedle</h1>
         </div>
-        <button 
+        <button
           onClick={() => setShowModal(true)}
           className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors"
         >
@@ -88,24 +88,23 @@ function App() {
 
       {/* Main Content */}
       <main className="flex-1 w-full max-w-4xl mx-auto p-4 md:p-6 flex flex-col justify-center">
-        
+
         {/* Guesses Status */}
         <div className="flex justify-center space-x-2 mb-6">
           {[...Array(5)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-2 w-12 rounded-full transition-colors ${
-                i < guesses.length 
-                  ? (guesses[i].isCorrect ? 'bg-success' : 'bg-error')
-                  : 'bg-surface border border-white/10'
-              }`}
+            <div
+              key={i}
+              className={`h-2 w-12 rounded-full transition-colors ${i < guesses.length
+                ? (guesses[i].isCorrect ? 'bg-success' : 'bg-error')
+                : 'bg-surface border border-white/10'
+                }`}
             />
           ))}
         </div>
 
         {/* Cinematic Frame */}
         <div className="mb-8">
-          <ImageView 
+          <ImageView
             r2FolderName={gameInfo.r2_folder_name}
             timestampSeconds={currentTimestamp}
           />
@@ -113,14 +112,15 @@ function App() {
 
         {/* Controls */}
         <div className="space-y-6">
-          <Timestamp 
-            valueSeconds={currentTimestamp} 
+          <Timestamp
+            valueSeconds={currentTimestamp}
             onChange={setCurrentTimestamp}
             disabled={gameState !== 'PLAYING'}
-            maxSeconds={gameInfo.runtime_seconds}
+            minSeconds={300} // Skip first 5 mins (hide possible title card)
+            maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins (hide possible ending titles)
           />
-          
-          <GuessInput 
+
+          <GuessInput
             onSubmit={handleGuessSubmit}
             disabled={gameState !== 'PLAYING'}
             isSubmitting={isSubmitting}
@@ -130,8 +130,8 @@ function App() {
       </main>
 
       {/* Game Over / Info Modal */}
-      <Modal 
-        isOpen={showModal} 
+      <Modal
+        isOpen={showModal}
         onClose={() => setShowModal(false)}
         title={gameState === 'PLAYING' ? 'How to Play' : (gameState === 'WON' ? 'You Won!' : 'Game Over')}
       >
@@ -147,11 +147,11 @@ function App() {
         ) : (
           <div className="space-y-6 text-center pt-2">
             <p className="text-lg">
-              {gameState === 'WON' 
+              {gameState === 'WON'
                 ? `You guessed the movie in ${guesses.length} ${guesses.length === 1 ? 'try' : 'tries'}!`
                 : 'Better luck next time!'}
             </p>
-            
+
             <ShareStats guesses={guesses} gameState={gameState} />
           </div>
         )}
