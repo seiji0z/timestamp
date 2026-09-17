@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Search } from 'lucide-react'
 import { fetchMovieCatalog, getTmdbPoster } from '../services/api'
 
-export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
+export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses = [] }) {
   const [query, setQuery] = useState('')
   const [catalog, setCatalog] = useState([])
   const [suggestions, setSuggestions] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
+  const [errorMsg, setErrorMsg] = useState('')
   const [posters, setPosters] = useState({}) // Cache for posters: { id: url }
   const dropdownRef = useRef(null)
 
@@ -34,8 +35,9 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
     }
 
     const lowerQuery = query.toLowerCase()
+    const guessedTitles = guesses.map(g => g.title.toLowerCase())
     const matches = catalog
-      .filter(m => m.title.toLowerCase().includes(lowerQuery))
+      .filter(m => m.title.toLowerCase().includes(lowerQuery) && !guessedTitles.includes(m.title.toLowerCase()))
       .slice(0, 5) // Show top 5 matches
 
     setSuggestions(matches)
@@ -54,8 +56,24 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!query.trim() || isSubmitting) return
-    onSubmit(query.trim())
+    const trimmedQuery = query.trim()
+    if (!trimmedQuery || isSubmitting) return
+
+    const lowerQuery = trimmedQuery.toLowerCase()
+
+    if (guesses.some(g => g.title.toLowerCase() === lowerQuery)) {
+      setErrorMsg('Already guessed!')
+      return
+    }
+
+    const matchedMovie = catalog.find(m => m.title.toLowerCase() === lowerQuery)
+    if (!matchedMovie) {
+      setErrorMsg('Movie not found!')
+      return
+    }
+
+    setErrorMsg('')
+    onSubmit(matchedMovie.title)
     setQuery('')
     setShowDropdown(false)
   }
@@ -75,6 +93,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
+            setErrorMsg('')
             setShowDropdown(true)
           }}
           onFocus={() => setShowDropdown(true)}
@@ -91,6 +110,12 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting }) {
           <Search className="w-5 h-5" />
         </button>
       </form>
+      
+      {errorMsg && (
+        <div className="absolute top-full mt-2 w-full text-center text-error text-sm font-medium animate-pulse">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Autocomplete Dropdown */}
       {showDropdown && suggestions.length > 0 && (

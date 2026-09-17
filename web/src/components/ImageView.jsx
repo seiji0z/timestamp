@@ -10,7 +10,7 @@ export default function ImageView({ r2FolderName, timestampSeconds, gameInfo }) 
   const cdnBase = import.meta.env.VITE_CDN_URL || 'https://cdn.example.com' // Fallback for dev
 
   useEffect(() => {
-    if (r2FolderName && timestampSeconds !== undefined && gameInfo) {
+    if (r2FolderName && timestampSeconds !== undefined && timestampSeconds !== null && gameInfo) {
       setIsLoading(true)
       setHasError(false)
 
@@ -26,6 +26,10 @@ export default function ImageView({ r2FolderName, timestampSeconds, gameInfo }) 
 
       const newUrl = `${cdnBase}/movies/${r2FolderName}/frame_${roundedFrameIndex}.jpg`
       setImageUrl(newUrl)
+    } else {
+      setIsLoading(false)
+      setHasError(false)
+      setImageUrl(null)
     }
   }, [r2FolderName, timestampSeconds, cdnBase, gameInfo])
 
@@ -45,7 +49,19 @@ export default function ImageView({ r2FolderName, timestampSeconds, gameInfo }) 
       )}
 
       <AnimatePresence mode="wait">
-        {imageUrl && (
+        {timestampSeconds === null ? (
+          <motion.div
+            key="placeholder"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="absolute inset-0 flex flex-col items-center justify-center text-white/50 bg-black"
+          >
+            <ImageIcon className="w-12 h-12 mb-4 opacity-50" />
+            <span className="text-sm font-medium tracking-widest uppercase">Enter a timestamp to see your first frame</span>
+          </motion.div>
+        ) : imageUrl && (
           <motion.img
             key={imageUrl}
             src={imageUrl}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 
 export function useGameLogic(gameId) {
   const [guesses, setGuesses] = useState([])
+  const [timestamps, setTimestamps] = useState([])
   const [gameState, setGameState] = useState('PLAYING') // 'PLAYING', 'WON', 'LOST'
 
   useEffect(() => {
@@ -12,6 +13,7 @@ export function useGameLogic(gameId) {
     if (stored) {
       const parsed = JSON.parse(stored)
       setGuesses(parsed.guesses || [])
+      setTimestamps(parsed.timestamps || [])
       setGameState(parsed.gameState || 'PLAYING')
     }
   }, [gameId])
@@ -19,8 +21,8 @@ export function useGameLogic(gameId) {
   useEffect(() => {
     if (!gameId) return
     // Save to local storage
-    localStorage.setItem(`framedle_${gameId}`, JSON.stringify({ guesses, gameState }))
-  }, [guesses, gameState, gameId])
+    localStorage.setItem(`framedle_${gameId}`, JSON.stringify({ guesses, timestamps, gameState }))
+  }, [guesses, timestamps, gameState, gameId])
 
   const addGuess = (guessTitle, isCorrect) => {
     if (gameState !== 'PLAYING') return
@@ -35,9 +37,16 @@ export function useGameLogic(gameId) {
     }
   }
 
+  const addTimestamp = (ts) => {
+    if (gameState !== 'PLAYING') return
+    setTimestamps([...timestamps, ts])
+  }
+
   return {
     guesses,
+    timestamps,
     gameState,
-    addGuess
+    addGuess,
+    addTimestamp
   }
 }

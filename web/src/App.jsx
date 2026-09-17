@@ -11,12 +11,13 @@ import { useGameLogic } from './hooks/useGameLogic'
 export default function App() {
   const [gameInfo, setGameInfo] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [currentTimestamp, setCurrentTimestamp] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
 
   // Game state stored in localStorage
-  const { guesses, gameState, addGuess, resetGame } = useGameLogic()
+  const { guesses, timestamps, gameState, addGuess, addTimestamp } = useGameLogic(gameInfo?.id)
+
+  const currentTimestamp = timestamps.length > 0 ? timestamps[timestamps.length - 1] : null
 
   // Answer state for game over
   const [answerData, setAnswerData] = useState(null)
@@ -31,11 +32,6 @@ export default function App() {
         // If not playing (won/lost), show the end modal immediately on load
         if (gameState !== 'PLAYING') {
           setShowModal(true)
-        } else {
-          // Initialize to middle of the movie if no guesses yet
-          if (guesses.length === 0) {
-            setCurrentTimestamp(Math.floor(info.runtime_seconds / 2))
-          }
         }
       }
       setLoading(false)
@@ -132,18 +128,30 @@ export default function App() {
 
         {/* Controls */}
         <div className="space-y-6">
-          <Timestamp
-            valueSeconds={currentTimestamp}
-            onChange={setCurrentTimestamp}
-            disabled={gameState !== 'PLAYING'}
-            minSeconds={300} // Skip first 5 mins (hide possible title card)
-            maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins (hide possible ending titles)
-          />
+          <div className="flex flex-col gap-2">
+            <Timestamp
+              valueSeconds={currentTimestamp}
+              onChange={(val) => {
+                if (timestamps.length <= guesses.length) {
+                  addTimestamp(val)
+                }
+              }}
+              disabled={gameState !== 'PLAYING' || timestamps.length > guesses.length}
+              minSeconds={300} // Skip first 5 mins (hide possible title card)
+              maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins (hide possible ending titles)
+            />
+            {timestamps.length > guesses.length && gameState === 'PLAYING' && (
+              <p className="text-center text-sm text-primary animate-pulse">
+                Submit a guess to unlock your next frame!
+              </p>
+            )}
+          </div>
 
           <GuessInput
             onSubmit={handleGuessSubmit}
             disabled={gameState !== 'PLAYING'}
             isSubmitting={isSubmitting}
+            guesses={guesses}
           />
         </div>
 
@@ -160,7 +168,10 @@ export default function App() {
             <p>1. Type a timestamp (HH:MM:SS) to jump around the movie.</p>
             <p>2. Look at the frame and try to guess the movie title.</p>
             <p>3. You have 5 guesses. Use the autocomplete to find valid movies.</p>
-            <p>NOTE: Timestamps may not be exact due to different cuts and skipped credits.</p>
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-3 rounded-lg text-sm mt-2">
+              <span className="font-semibold block mb-1">⚠️ Note on Timestamps:</span>
+              Timestamps are approximate. Due to different theatrical cuts, regional frame rates, and skipped title sequences, the exact frame shown may be slightly shifted from your timestamp.
+            </div>
             <p className="text-sm text-white/50 mt-4 border-t border-white/10 pt-4">
               * A new movie is automatically selected every day at Midnight UTC.
             </p>

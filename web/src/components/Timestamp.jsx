@@ -6,7 +6,10 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
 
   // Convert seconds to HH:MM:SS for display
   useEffect(() => {
-    if (valueSeconds === undefined || valueSeconds === null) return
+    if (valueSeconds === undefined || valueSeconds === null) {
+      setInputValue('')
+      return
+    }
     const h = Math.floor(valueSeconds / 3600).toString().padStart(2, '0')
     const m = Math.floor((valueSeconds % 3600) / 60).toString().padStart(2, '0')
     const s = (valueSeconds % 60).toString().padStart(2, '0')
