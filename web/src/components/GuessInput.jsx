@@ -8,6 +8,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
   const [suggestions, setSuggestions] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
+  const [dropdownPos, setDropdownPos] = useState('bottom')
   const [posters, setPosters] = useState({}) // Cache for posters: { id: url }
   const dropdownRef = useRef(null)
 
@@ -26,6 +27,21 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
     document.addEventListener("mousedown", handleClickOutside)
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
+
+  // Dynamic dropdown positioning
+  useEffect(() => {
+    if (showDropdown && dropdownRef.current) {
+      const rect = dropdownRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+
+      // If there's less than ~320px below (about 4-5 items) and more space above, flip to top
+      if (spaceBelow < 320 && rect.top > spaceBelow) {
+        setDropdownPos('top')
+      } else {
+        setDropdownPos('bottom')
+      }
+    }
+  }, [showDropdown, suggestions.length])
 
   // Filter catalog and fetch posters
   useEffect(() => {
@@ -110,7 +126,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
           <Search className="w-5 h-5" />
         </button>
       </form>
-      
+
       {errorMsg && (
         <div className="absolute top-full mt-2 w-full text-center text-error text-sm font-medium animate-pulse">
           {errorMsg}
@@ -119,7 +135,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
 
       {/* Autocomplete Dropdown */}
       {showDropdown && suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 divide-y divide-white/5">
+        <div className={`absolute ${dropdownPos === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 right-0 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 divide-y divide-white/5`}>
           {suggestions.map(movie => (
             <div
               key={movie.id}
