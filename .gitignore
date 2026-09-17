@@ -71,3 +71,5 @@ ingestion-pipeline/temp_workspace/
 *.jpg
 *.jpeg
 *.png
+
+node_modules/
