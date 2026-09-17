@@ -110,8 +110,11 @@ def schedule_tomorrows_game(supabase, bucket_name):
     
     try:
         print(f"Scraping frames from: {selected_movie['url']}")
-        # Scraping interval of 50 for production to keep sizes reasonable, adjust as needed
-        scrape_movie_frames(selected_movie['url'], temp_workspace, skip_interval=50)
+        max_timestamp = scrape_movie_frames(selected_movie['url'], temp_workspace, skip_interval=50)
+        
+        # Update the actual runtime in the database
+        print(f"Updating movie runtime to {max_timestamp} seconds.")
+        supabase.table('movies').update({'runtime_seconds': max_timestamp}).eq('id', selected_movie['id']).execute()
         
         print(f"Uploading frames to R2 folder: {selected_movie['r2_folder_name']}")
         upload_frames_to_r2(temp_workspace, bucket_name, selected_movie['r2_folder_name'])

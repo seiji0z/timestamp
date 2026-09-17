@@ -27,7 +27,8 @@ def main():
     
     try:
         print(f"Scraping frames for movie_id {args.movie_id}...")
-        scrape_movie_frames(args.url, temp_workspace, args.skip_interval)
+        max_timestamp = scrape_movie_frames(args.url, temp_workspace, args.skip_interval)
+        print(f"Movie runtime based on frames: {max_timestamp} seconds.")
         
         print(f"\nUploading frames to Cloudflare R2...")
         upload_frames_to_r2(temp_workspace, args.bucket, args.movie_id)

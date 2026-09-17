@@ -117,6 +117,7 @@ function App() {
             valueSeconds={currentTimestamp} 
             onChange={setCurrentTimestamp}
             disabled={gameState !== 'PLAYING'}
+            maxSeconds={gameInfo.runtime_seconds}
           />
           
           <GuessInput 

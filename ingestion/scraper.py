@@ -87,4 +87,6 @@ def scrape_movie_frames(url, output_dir, skip_interval=5):
             current_url = None
             print("No more pages found.")
 
+    max_timestamp = image_count - 1 if image_count > 0 else 0
     print(f"Scraping complete. Processed {image_count} total images, saved {saved_count} frames.")
+    return max_timestamp
