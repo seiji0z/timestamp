@@ -17,9 +17,9 @@ def get_supabase_client() -> Client:
     return create_client(url, key)
 
 def get_r2_client():
-    r2_endpoint = os.environ.get("CLOUDFLARE_R2_ENDPOINT")
-    access_key = os.environ.get("CLOUDFLARE_R2_ACCESS_KEY")
-    secret_key = os.environ.get("CLOUDFLARE_R2_SECRET_KEY")
+    r2_endpoint = os.environ.get("R2_ENDPOINT_URL")
+    access_key = os.environ.get("AWS_ACCESS_KEY_ID")
+    secret_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
 
     if not r2_endpoint or not access_key or not secret_key:
         raise ValueError("Cloudflare R2 credentials missing from environment variables.")
