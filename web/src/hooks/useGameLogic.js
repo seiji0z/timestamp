@@ -42,11 +42,19 @@ export function useGameLogic(gameId) {
     setTimestamps([...timestamps, ts])
   }
 
+  const replaceLastTimestamp = (ts) => {
+    if (gameState !== 'PLAYING' || timestamps.length === 0) return
+    const newTimestamps = [...timestamps]
+    newTimestamps[newTimestamps.length - 1] = ts
+    setTimestamps(newTimestamps)
+  }
+
   return {
     guesses,
     timestamps,
     gameState,
     addGuess,
-    addTimestamp
+    addTimestamp,
+    replaceLastTimestamp
   }
 }

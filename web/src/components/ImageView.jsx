@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Image as ImageIcon } from 'lucide-react'
 
-export default function ImageView({ r2FolderName, timestampSeconds, gameInfo }) {
+export default function ImageView({ r2FolderName, timestampSeconds, gameInfo, onError }) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [imageUrl, setImageUrl] = useState(null)
@@ -75,6 +75,7 @@ export default function ImageView({ r2FolderName, timestampSeconds, gameInfo }) 
             onError={() => {
               setIsLoading(false)
               setHasError(true)
+              if (onError) onError()
             }}
           />
         )}

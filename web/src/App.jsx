@@ -13,9 +13,10 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  const [frameLoadError, setFrameLoadError] = useState(false)
 
   // Game state stored in localStorage
-  const { guesses, timestamps, gameState, addGuess, addTimestamp } = useGameLogic(gameInfo?.game_id)
+  const { guesses, timestamps, gameState, addGuess, addTimestamp, replaceLastTimestamp } = useGameLogic(gameInfo?.game_id)
 
   const currentTimestamp = timestamps.length > 0 ? timestamps[timestamps.length - 1] : null
 
@@ -59,6 +60,7 @@ export default function App() {
     setIsSubmitting(false)
 
     addGuess(guessTitle, isCorrect)
+    setFrameLoadError(false) // reset error on new guess round
 
     // Automatically show modal if game ends after this guess
     if (isCorrect || guesses.length === 4) { // 4 because state hasn't updated to 5 yet
@@ -123,6 +125,7 @@ export default function App() {
             r2FolderName={gameInfo.r2_folder_name}
             timestampSeconds={currentTimestamp}
             gameInfo={gameInfo}
+            onError={() => setFrameLoadError(true)}
           />
         </div>
 
@@ -132,17 +135,25 @@ export default function App() {
             <Timestamp
               valueSeconds={currentTimestamp}
               onChange={(val) => {
-                if (timestamps.length <= guesses.length) {
+                if (frameLoadError) {
+                  replaceLastTimestamp(val)
+                  setFrameLoadError(false)
+                } else if (timestamps.length <= guesses.length) {
                   addTimestamp(val)
                 }
               }}
-              disabled={gameState !== 'PLAYING' || timestamps.length > guesses.length}
+              disabled={gameState !== 'PLAYING' || (timestamps.length > guesses.length && !frameLoadError)}
               minSeconds={300} // Skip first 5 mins (hide possible title card)
               maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins (hide possible ending titles)
             />
-            {timestamps.length > guesses.length && gameState === 'PLAYING' && (
+            {timestamps.length > guesses.length && gameState === 'PLAYING' && !frameLoadError && (
               <p className="text-center text-sm text-primary animate-pulse">
                 Submit a guess to unlock your next frame!
+              </p>
+            )}
+            {frameLoadError && (
+              <p className="text-center text-sm text-error animate-pulse">
+                That frame couldn't be loaded. Try a different timestamp!
               </p>
             )}
           </div>
