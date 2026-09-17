@@ -18,8 +18,8 @@ export async function getTodayGame() {
   return data
 }
 
-export async function submitGuess(guessTitle) {
-  const { data, error } = await supabase.rpc('guess_movie', { guess_title: guessTitle })
+export async function submitGuess(gameId, guessTitle) {
+  const { data, error } = await supabase.rpc('guess_movie', { p_game_id: gameId, p_guess_title: guessTitle })
 
   if (error) {
     console.error('Error validating guess:', error)

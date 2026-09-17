@@ -15,7 +15,7 @@ export default function App() {
   const [showModal, setShowModal] = useState(false)
 
   // Game state stored in localStorage
-  const { guesses, timestamps, gameState, addGuess, addTimestamp } = useGameLogic(gameInfo?.id)
+  const { guesses, timestamps, gameState, addGuess, addTimestamp } = useGameLogic(gameInfo?.game_id)
 
   const currentTimestamp = timestamps.length > 0 ? timestamps[timestamps.length - 1] : null
 
@@ -55,7 +55,7 @@ export default function App() {
 
   const handleGuessSubmit = async (guessTitle) => {
     setIsSubmitting(true)
-    const isCorrect = await submitGuess(guessTitle)
+    const isCorrect = await submitGuess(gameInfo.game_id, guessTitle)
     setIsSubmitting(false)
 
     addGuess(guessTitle, isCorrect)
