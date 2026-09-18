@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Image as ImageIcon } from 'lucide-react'
 
-export default function ImageView({ r2FolderName, timestampSeconds, gameInfo, onError }) {
+export default function ImageView({ r2FolderName, timestampSeconds, gameInfo, onError, guessesCount = 0 }) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [imageUrl, setImageUrl] = useState(null)
@@ -59,7 +59,9 @@ export default function ImageView({ r2FolderName, timestampSeconds, gameInfo, on
             className="absolute inset-0 flex flex-col items-center justify-center text-white/50 bg-black"
           >
             <ImageIcon className="w-12 h-12 mb-4 opacity-50" />
-            <span className="text-sm font-medium tracking-widest uppercase">Enter a timestamp to see your first frame</span>
+            <span className="text-sm font-medium tracking-widest uppercase">
+              {guessesCount === 0 ? "Enter a timestamp to see your first frame" : "Enter another timestamp"}
+            </span>
           </motion.div>
         ) : imageUrl && (
           <motion.img

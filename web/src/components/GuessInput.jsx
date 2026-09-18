@@ -7,6 +7,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
   const [catalog, setCatalog] = useState([])
   const [suggestions, setSuggestions] = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
+  const [focusedIndex, setFocusedIndex] = useState(-1)
   const [errorMsg, setErrorMsg] = useState('')
   const [dropdownPos, setDropdownPos] = useState('bottom')
   const [posters, setPosters] = useState({}) // Cache for posters: { id: url }
@@ -57,6 +58,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
       .slice(0, 5) // Show top 5 matches
 
     setSuggestions(matches)
+    setFocusedIndex(-1) // reset focus when suggestions change
 
     // Fetch posters for matches if not cached
     matches.forEach(m => {
@@ -113,6 +115,24 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
             setShowDropdown(true)
           }}
           onFocus={() => setShowDropdown(true)}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault()
+              if (!showDropdown) setShowDropdown(true)
+              setFocusedIndex(prev => Math.min(prev + 1, suggestions.length - 1))
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault()
+              setFocusedIndex(prev => Math.max(prev - 1, -1))
+            } else if (e.key === 'Enter') {
+              if (showDropdown && focusedIndex >= 0 && suggestions[focusedIndex]) {
+                e.preventDefault()
+                handleSelect(suggestions[focusedIndex])
+              }
+            } else if (e.key === 'Escape') {
+              setShowDropdown(false)
+              setFocusedIndex(-1)
+            }
+          }}
           disabled={disabled || isSubmitting}
           placeholder="Guess the movie..."
           className="w-full bg-surface border border-white/10 rounded-full py-4 pl-6 pr-14 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 text-lg shadow-xl"
@@ -136,11 +156,13 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
       {/* Autocomplete Dropdown */}
       {showDropdown && suggestions.length > 0 && (
         <div className={`absolute ${dropdownPos === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 right-0 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 divide-y divide-white/5`}>
-          {suggestions.map(movie => (
+          {suggestions.map((movie, index) => (
             <div
               key={movie.id}
               onClick={() => handleSelect(movie)}
-              className="flex items-center gap-4 p-3 hover:bg-white/10 cursor-pointer transition-colors"
+              className={`flex items-center gap-4 p-3 cursor-pointer transition-colors ${
+                focusedIndex === index ? 'bg-white/20' : 'hover:bg-white/10'
+              }`}
             >
               <div className="w-10 h-14 bg-black rounded shrink-0 overflow-hidden shadow">
                 {posters[movie.id] ? (

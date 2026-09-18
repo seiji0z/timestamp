@@ -71,10 +71,6 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
           onKeyDown={handleKeyDown}
         />
       </div>
-      <div className="mt-3 flex items-start sm:items-center justify-center gap-1.5 text-white/40 text-[10px] sm:text-xs font-medium">
-        <Info className="w-3.5 h-3.5 shrink-0" />
-        <span>Timestamps are approximate and may not reflect exact timing.</span>
-      </div>
     </div>
   )
 }

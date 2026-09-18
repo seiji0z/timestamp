@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Film } from 'lucide-react'
+import { Film, Info } from 'lucide-react'
 import ImageView from './components/ImageView'
 import Timestamp from './components/Timestamp'
 import GuessInput from './components/GuessInput'
@@ -19,6 +19,7 @@ export default function App() {
   const { guesses, timestamps, gameState, addGuess, addTimestamp, replaceLastTimestamp } = useGameLogic(gameInfo?.game_id)
 
   const currentTimestamp = timestamps.length > 0 ? timestamps[timestamps.length - 1] : null
+  const displayTimestamp = timestamps.length > guesses.length ? currentTimestamp : null
 
   // Answer state for game over
   const [answerData, setAnswerData] = useState(null)
@@ -123,8 +124,9 @@ export default function App() {
         <div className="mb-8">
           <ImageView
             r2FolderName={gameInfo.r2_folder_name}
-            timestampSeconds={currentTimestamp}
+            timestampSeconds={displayTimestamp}
             gameInfo={gameInfo}
+            guessesCount={guesses.length}
             onError={() => setFrameLoadError(true)}
           />
         </div>
@@ -143,19 +145,26 @@ export default function App() {
                 }
               }}
               disabled={gameState !== 'PLAYING' || (timestamps.length > guesses.length && !frameLoadError)}
-              minSeconds={300} // Skip first 5 mins (hide possible title card)
-              maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins (hide possible ending titles)
+              minSeconds={330} // Skip first 5:30 mins
+              maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins
             />
-            {timestamps.length > guesses.length && gameState === 'PLAYING' && !frameLoadError && (
-              <p className="text-center text-sm text-primary animate-pulse">
-                Submit a guess to unlock your next frame!
-              </p>
-            )}
-            {frameLoadError && (
-              <p className="text-center text-sm text-error animate-pulse">
-                That frame couldn't be loaded. Try a different timestamp!
-              </p>
-            )}
+
+            <div className="mt-1 text-center text-xs font-medium h-5 flex items-center justify-center transition-all">
+              {frameLoadError ? (
+                <p className="text-error animate-pulse">
+                  That frame couldn't be loaded. Try a different timestamp!
+                </p>
+              ) : timestamps.length > guesses.length && gameState === 'PLAYING' ? (
+                <p className="text-primary animate-pulse">
+                  Submit a guess to unlock your next frame!
+                </p>
+              ) : gameState === 'PLAYING' ? (
+                <p className="text-white/40 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5" />
+                  First & last few mins omitted to avoid possible title/endcard spoilers.
+                </p>
+              ) : null}
+            </div>
           </div>
 
           <GuessInput
@@ -176,8 +185,8 @@ export default function App() {
       >
         {gameState === 'PLAYING' ? (
           <div className="space-y-4 text-white/80 leading-relaxed">
-            <p>1. Type a timestamp (HH:MM:SS) to jump around the movie.</p>
-            <p>2. Look at the frame and try to guess the movie title.</p>
+            <p>1. Type a timestamp (HH:MM:SS) to jump around the movie. The earliest you can start is 00:05:30 to avoid early title screens. If you enter a time lower than 5:30, it will automatically default to 5:30.</p>
+            <p>2. Look at the frame shown at your chosen time and try to guess the movie title.</p>
             <p>3. You have 5 guesses. Use the autocomplete to find valid movies.</p>
             <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-3 rounded-lg text-sm mt-2">
               <span className="font-semibold block mb-1">⚠️ Note on Timestamps:</span>
@@ -202,13 +211,19 @@ export default function App() {
               </div>
             )}
 
-            <p className="text-lg">
+            <p className="text-lg font-medium">
               {gameState === 'WON'
                 ? `You guessed the movie in ${guesses.length} ${guesses.length === 1 ? 'try' : 'tries'}!`
                 : 'Better luck next time!'}
             </p>
 
-            <ShareStats guesses={guesses} gameState={gameState} />
+            <div>
+              <ShareStats guesses={guesses} gameState={gameState} />
+            </div>
+
+            <p className="text-sm text-white/50 border-t border-white/10 pt-5 mt-2 font-medium">
+              A new movie is selected every day at Midnight UTC. Come back tomorrow!
+            </p>
           </div>
         )}
       </Modal>
