@@ -148,7 +148,17 @@ export default function App() {
               }}
               disabled={gameState !== 'PLAYING' || (timestamps.length > guesses.length && !frameLoadError)}
               minSeconds={330} // Skip first 5:30 mins
-              maxSeconds={gameInfo.runtime_seconds - 600} // Skip last 10 mins
+              maxSeconds={(() => {
+                const rawRatio = gameInfo.frame_count / gameInfo.runtime_seconds
+                let exactRatio = 1.0
+                if (rawRatio < 0.75) exactRatio = 0.5
+                else if (rawRatio < 1.5) exactRatio = 1.0
+                else exactRatio = 2.0
+                
+                const runtimeMax = gameInfo.runtime_seconds - 600
+                const availableMax = Math.floor(gameInfo.frame_count / exactRatio)
+                return Math.min(runtimeMax, availableMax)
+              })()}
             />
 
             <div className="mt-1 text-center text-xs font-medium h-5 flex items-center justify-center transition-all">

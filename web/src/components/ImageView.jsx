@@ -17,8 +17,25 @@ export default function ImageView({ r2FolderName, timestampSeconds, gameInfo, on
       const { runtime_seconds, frame_count, frame_interval } = gameInfo
 
       // Calculate the exact theoretical frame index for the requested time
-      const ratio = frame_count / runtime_seconds
-      const exactFrame = timestampSeconds * ratio
+      // The ingestion scraper now uses the true sequential frame numbers from the source
+      // However, movie-screencaps.com often stops capturing when the end credits roll,
+      // and our database might have a default runtime of 7200s if TMDB fails.
+      // So `frame_count / runtime_seconds` will be slightly lower than the true frame rate
+      const rawRatio = frame_count / runtime_seconds
+
+      // Since movie-screencaps.com uses constant capture intervals (like 2 fps or 1 fps),
+      // we snap the raw ratio to the nearest standard interval
+      // This mathematically fixes ANY drift caused by missing credits or wrong TMDB runtimes.
+      let exactRatio = 1.0
+      if (rawRatio < 0.75) {
+        exactRatio = 0.5 // 1 frame every 2 seconds
+      } else if (rawRatio < 1.5) {
+        exactRatio = 1.0 // 1 frame per second
+      } else {
+        exactRatio = 2.0 // 2 frames per second
+      }
+
+      const exactFrame = timestampSeconds * exactRatio
 
       // We must round this to the nearest interval that was actually saved by the backend
       const interval = frame_interval || 50

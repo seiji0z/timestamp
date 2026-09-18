@@ -29,6 +29,7 @@ def get_real_runtime(title, year):
                 return details['runtime'] * 60 # Convert minutes to seconds
     except Exception as e:
         print(f"Error fetching runtime from TMDB: {e}")
+    print("WARNING: Falling back to 7200 seconds for runtime! Timestamps will drift if this is incorrect.")
     return 7200
 
 def get_supabase_client() -> Client:
@@ -109,8 +110,7 @@ def schedule_tomorrows_game(supabase, bucket_name):
     # Fetch unused movies
     query = supabase.table('movies').select('*')
     if used_ids:
-        # Not perfect for huge DBs due to URL length limits, but works for thousands of items.
-        # Alternatively, fetch all and filter in Python. Let's do that for safety.
+        # Fetch all and filter in Python.
         all_movies_resp = supabase.table('movies').select('*').execute()
         available_movies = [m for m in all_movies_resp.data if m['id'] not in used_ids]
     else:
@@ -134,10 +134,10 @@ def schedule_tomorrows_game(supabase, bucket_name):
         print(f"Scraping frames from: {selected_movie['url']}")
         max_timestamp = scrape_movie_frames(selected_movie['url'], temp_workspace, skip_interval=50)
         
-        # Get REAL runtime from TMDB
+        # Get real runtime from TMDB
         real_runtime = get_real_runtime(selected_movie['title'], selected_movie['release_year'])
         
-        # Update the database with real time AND frame metrics
+        # Update the database with real time and frame metrics
         print(f"Updating movie: real runtime {real_runtime}s, frame_count {max_timestamp}.")
         supabase.table('movies').update({
             'runtime_seconds': real_runtime,
@@ -146,10 +146,17 @@ def schedule_tomorrows_game(supabase, bucket_name):
         }).eq('id', selected_movie['id']).execute()
         
         # Delete spoiler frames (first 5 mins, last 10 mins) locally before uploading to R2
-        # Note: We must convert the real time (300 seconds) to the frame index to delete!
-        ratio = max_timestamp / real_runtime if real_runtime > 0 else 1
-        safe_start_frame = int(300 * ratio)
-        safe_end_frame = int((real_runtime - 600) * ratio)
+        # Must convert the real time (300 seconds) to the frame index to delete
+        raw_ratio = max_timestamp / real_runtime if real_runtime > 0 else 1
+        if raw_ratio < 0.75:
+            exact_ratio = 0.5
+        elif raw_ratio < 1.5:
+            exact_ratio = 1.0
+        else:
+            exact_ratio = 2.0
+            
+        safe_start_frame = int(300 * exact_ratio)
+        safe_end_frame = int((real_runtime - 600) * exact_ratio)
         
         for f in os.listdir(temp_workspace):
             if f.startswith('frame_') and f.endswith('.jpg'):

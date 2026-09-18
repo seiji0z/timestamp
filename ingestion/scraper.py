@@ -64,28 +64,38 @@ def scrape_movie_frames(url, output_dir, skip_interval=5):
             if '?' in full_img_url:
                 full_img_url = full_img_url.split('?')[0]
             
-            # Implement skip interval
-            if image_count % skip_interval == 0:
-                # We calculate the "simulated timestamp".
-                # If they capture every 2 seconds, then 1 original image = 2 seconds. 
-                # For simplicity here, we assume 1 image = 1 second.
-                simulated_timestamp = image_count 
+            import re
+            # Extract true frame number from URL (e.g. ...-1234.jpg or .../1234.jpg)
+            match = re.search(r'-(\d+)\.(jpg|jpeg|png|webp)$', full_img_url, re.IGNORECASE)
+            if not match:
+                match = re.search(r'/(\d+)\.(jpg|jpeg|png|webp)$', full_img_url, re.IGNORECASE)
                 
-                filename = f"frame_{simulated_timestamp}.jpg"
-                filepath = os.path.join(output_dir, filename)
+            if not match:
+                # If no number is found, it's likely a junk thumbnail, skip 
+                continue
                 
-                if not os.path.exists(filepath):
-                    try:
-                        img_resp = requests.get(full_img_url, headers=headers)
-                        img_resp.raise_for_status()
-                        with open(filepath, 'wb') as f:
-                            f.write(img_resp.content)
-                        saved_count += 1
-                        print(f"Saved {filename}")
-                    except Exception as e:
-                        print(f"Failed to download {full_img_url}: {e}")
+            true_frame_number = int(match.group(1))
             
-            image_count += 1
+            # Keep track of the highest frame number we've seen (for max_timestamp)
+            if true_frame_number > image_count:
+                image_count = true_frame_number
+
+            # Implement skip interval based on true frame number
+            rounded_frame_number = round(true_frame_number / skip_interval) * skip_interval
+            filename = f"frame_{rounded_frame_number}.jpg"
+            filepath = os.path.join(output_dir, filename)
+            
+            # Save if we reached the rounded interval and haven't saved it yet
+            if not os.path.exists(filepath) and true_frame_number >= rounded_frame_number:
+                try:
+                    img_resp = requests.get(full_img_url, headers=headers)
+                    img_resp.raise_for_status()
+                    with open(filepath, 'wb') as f:
+                        f.write(img_resp.content)
+                    saved_count += 1
+                    print(f"Saved {filename} (from true frame {true_frame_number})")
+                except Exception as e:
+                    print(f"Failed to download {full_img_url}: {e}")
             
         # Find next page link (Site-specific selector)
         next_link_tag = soup.find('a', string=lambda t: t and 'Next' in t) or soup.select_one('a.next, a.next-page, a.page-link[rel="next"]')
