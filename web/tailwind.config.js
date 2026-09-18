@@ -8,11 +8,13 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
+        gilroy: ['Gilroy', 'sans-serif'],
       },
       colors: {
-        background: '#0a0a0a',
-        surface: '#171717',
-        primary: '#3b82f6',
+        background: '#000000',
+        surface: '#141414',
+        primary: '#E50914',
+        'primary-foreground': '#ffffff',
         accent: '#f59e0b',
         success: '#22c55e',
         error: '#ef4444'

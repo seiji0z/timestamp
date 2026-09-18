@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Film, Info } from 'lucide-react'
+import { Info } from 'lucide-react'
 import ImageView from './components/ImageView'
 import Timestamp from './components/Timestamp'
 import GuessInput from './components/GuessInput'
@@ -72,7 +72,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-[#E50914] border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
   }
@@ -91,8 +91,8 @@ export default function App() {
       {/* Header */}
       <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <Film className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold tracking-tight">Framedle</h1>
+          <img src="/logo.png" alt="timestamp! Logo" className="h-8 w-8 object-contain" />
+          <h1 className="text-2xl font-bold tracking-tight font-gilroy text-[#FAF9F6]">timestamp!</h1>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -155,7 +155,7 @@ export default function App() {
                   That frame couldn't be loaded. Try a different timestamp!
                 </p>
               ) : timestamps.length > guesses.length && gameState === 'PLAYING' ? (
-                <p className="text-primary animate-pulse">
+                <p className="text-[#E50914] animate-pulse">
                   Submit a guess to unlock your next frame!
                 </p>
               ) : gameState === 'PLAYING' ? (

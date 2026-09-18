@@ -63,7 +63,7 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
         <input
           type="text"
           disabled={disabled}
-          className="w-full bg-surface/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full bg-surface/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E50914] focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           placeholder="HH:MM:SS (e.g. 01:15:30)"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}

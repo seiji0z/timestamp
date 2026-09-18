@@ -135,13 +135,13 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
           }}
           disabled={disabled || isSubmitting}
           placeholder="Guess the movie..."
-          className="w-full bg-surface border border-white/10 rounded-full py-4 pl-6 pr-14 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all disabled:opacity-50 text-lg shadow-xl"
+          className="w-full bg-surface border border-white/10 rounded-full py-4 pl-6 pr-14 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#E50914] focus:border-transparent transition-all disabled:opacity-50 text-lg shadow-xl"
           autoComplete="off"
         />
         <button
           type="submit"
           disabled={disabled || !query.trim() || isSubmitting}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:hover:bg-primary"
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-[#E50914] text-white rounded-full hover:bg-[#E50914]/90 transition-colors disabled:opacity-50 disabled:hover:bg-[#E50914]"
         >
           <Search className="w-5 h-5" />
         </button>

@@ -16,7 +16,7 @@ export default function ShareStats({ guesses, gameState }) {
       }
     }
 
-    const text = `Framedle\n${grid}\nPlay at framedle.com!`
+    const text = `Timestamp!\n${grid}\nPlay at timestamp.com!`
     
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
@@ -29,7 +29,7 @@ export default function ShareStats({ guesses, gameState }) {
   return (
     <button
       onClick={handleShare}
-      className="mt-6 flex items-center justify-center space-x-2 w-full max-w-sm mx-auto bg-primary hover:bg-primary/90 text-white py-3 px-6 rounded-lg font-semibold transition-all shadow-lg hover:shadow-primary/20"
+      className="mt-6 flex items-center justify-center space-x-2 w-full max-w-sm mx-auto bg-[#E50914] hover:bg-[#E50914]/90 text-white py-3 px-6 rounded-lg font-semibold transition-all shadow-lg hover:shadow-[#E50914]/20"
     >
       {copied ? (
         <>
