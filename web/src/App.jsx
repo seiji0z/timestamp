@@ -189,6 +189,11 @@ export default function App() {
 
       </main>
 
+      {/* Footer */}
+      <footer className="pb-6 text-center text-xs text-white/30 font-medium tracking-wide">
+        created by seiji0z
+      </footer>
+
       {/* Game Over / Info Modal */}
       <Modal
         isOpen={showModal}
