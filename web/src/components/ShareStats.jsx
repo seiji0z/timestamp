@@ -16,8 +16,8 @@ export default function ShareStats({ guesses, gameState }) {
       }
     }
 
-    const text = `Timestamp!\n${grid}\nPlay at timestamp.com!`
-    
+    const text = `timestamp!\n${grid}\nPlay at timestamp.com!`
+
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)

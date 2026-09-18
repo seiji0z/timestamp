@@ -71,7 +71,9 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
+        <img src="/logo.png" alt="timestamp! Logo" className="h-20 w-20 object-contain animate-pulse" />
+        <h1 className="text-3xl font-bold tracking-tight font-gilroy text-[#FAF9F6]">timestamp!</h1>
         <div className="w-8 h-8 border-4 border-[#E50914] border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
