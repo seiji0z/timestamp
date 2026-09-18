@@ -72,7 +72,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
-        <img src="/logo.png" alt="timestamp! Logo" className="h-20 w-20 object-contain animate-pulse" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="timestamp! Logo" className="h-20 w-20 object-contain animate-pulse" />
         <h1 className="text-3xl font-bold tracking-tight font-gilroy text-[#FAF9F6]">timestamp!</h1>
         <div className="w-8 h-8 border-4 border-[#E50914] border-t-transparent rounded-full animate-spin"></div>
       </div>
@@ -93,7 +93,7 @@ export default function App() {
       {/* Header */}
       <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="timestamp! Logo" className="h-8 w-8 object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="timestamp! Logo" className="h-8 w-8 object-contain" />
           <h1 className="text-2xl font-bold tracking-tight font-gilroy text-[#FAF9F6]">timestamp!</h1>
         </div>
         <button
