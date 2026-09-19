@@ -66,3 +66,12 @@ export async function getTmdbPoster(title, year) {
     return null
   }
 }
+
+export async function getHints(gameId, guessCount) {
+  const { data, error } = await supabase.rpc('get_hints', { p_game_id: gameId, p_guess_count: guessCount })
+  if (error) {
+    console.error('Error fetching hints:', error)
+    return null
+  }
+  return data
+}

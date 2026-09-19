@@ -5,7 +5,8 @@ import Timestamp from './components/Timestamp'
 import GuessInput from './components/GuessInput'
 import ShareStats from './components/ShareStats'
 import Modal from './components/Modal'
-import { getTodayGame, submitGuess, revealAnswer, getTmdbPoster } from './services/api'
+import Hints from './components/Hints'
+import { getTodayGame, submitGuess, revealAnswer, getTmdbPoster, getHints } from './services/api'
 import { useGameLogic } from './hooks/useGameLogic'
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
   // Answer state for game over
   const [answerData, setAnswerData] = useState(null)
   const [answerPoster, setAnswerPoster] = useState(null)
+  const [hints, setHints] = useState({})
 
   // Fetch today's game on mount
   useEffect(() => {
@@ -54,6 +56,15 @@ export default function App() {
       })
     }
   }, [gameState, answerData])
+
+  // Fetch hints based on incorrect guesses
+  useEffect(() => {
+    if (gameInfo && guesses.length >= 2) {
+      getHints(gameInfo.game_id, guesses.length).then(data => {
+        if (data) setHints(data)
+      })
+    }
+  }, [guesses.length, gameInfo])
 
   const handleGuessSubmit = async (guessTitle) => {
     setIsSubmitting(true)
@@ -178,6 +189,8 @@ export default function App() {
               ) : null}
             </div>
           </div>
+
+          <Hints hints={hints} />
 
           <GuessInput
             onSubmit={handleGuessSubmit}
