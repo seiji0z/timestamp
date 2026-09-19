@@ -15,6 +15,7 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [frameLoadError, setFrameLoadError] = useState(false)
+  const [shakeError, setShakeError] = useState(false)
 
   // Game state stored in localStorage
   const { guesses, timestamps, gameState, addGuess, addTimestamp, replaceLastTimestamp } = useGameLogic(gameInfo?.game_id)
@@ -71,6 +72,14 @@ export default function App() {
     const isCorrect = await submitGuess(gameInfo.game_id, guessTitle)
     setIsSubmitting(false)
 
+    if (!isCorrect && !gameState === 'WON') {
+      setShakeError(true)
+      setTimeout(() => setShakeError(false), 500)
+    } else if (!isCorrect && guesses.length < 5) {
+      setShakeError(true)
+      setTimeout(() => setShakeError(false), 500)
+    }
+
     addGuess(guessTitle, isCorrect)
     setFrameLoadError(false) // reset error on new guess round
 
@@ -99,7 +108,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-sans">
+    <div className={`min-h-screen bg-background text-white flex flex-col font-sans transition-all overflow-x-hidden ${shakeError ? 'animate-error-shake' : ''}`}>
 
       {/* Header */}
       <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
@@ -134,7 +143,7 @@ export default function App() {
         </div>
 
         {/* Cinematic Frame */}
-        <div className="mb-8">
+        <div className="mb-6">
           <ImageView
             r2FolderName={gameInfo.r2_folder_name}
             timestampSeconds={displayTimestamp}
@@ -145,7 +154,7 @@ export default function App() {
         </div>
 
         {/* Controls */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <Timestamp
               valueSeconds={currentTimestamp}
@@ -165,7 +174,7 @@ export default function App() {
                 if (rawRatio < 0.75) exactRatio = 0.5
                 else if (rawRatio < 1.5) exactRatio = 1.0
                 else exactRatio = 2.0
-                
+
                 const runtimeMax = gameInfo.runtime_seconds - 600
                 const availableMax = Math.floor(gameInfo.frame_count / exactRatio)
                 return Math.min(runtimeMax, availableMax)
@@ -190,20 +199,21 @@ export default function App() {
             </div>
           </div>
 
-          <Hints hints={hints} />
-
           <GuessInput
             onSubmit={handleGuessSubmit}
             disabled={gameState !== 'PLAYING'}
             isSubmitting={isSubmitting}
             guesses={guesses}
           />
+
+          <Hints hints={hints} />
+
         </div>
 
       </main>
 
       {/* Footer */}
-      <footer className="pb-6 text-center text-xs text-white/30 font-medium tracking-wide">
+      <footer className="pb-4 text-center text-xs text-white/30 font-medium tracking-wide">
         created by seiji0z
       </footer>
 
