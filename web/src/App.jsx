@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Info } from 'lucide-react'
+import { Info, ChevronLeft, ChevronRight } from 'lucide-react'
 import ImageView from './components/ImageView'
 import Timestamp from './components/Timestamp'
 import GuessInput from './components/GuessInput'
@@ -24,8 +24,21 @@ export default function App() {
   const { guesses, timestamps, gameState, addGuess, addTimestamp, replaceLastTimestamp } = useGameLogic(gameInfo?.game_id)
   const { stats, recordGameResult } = useStats()
 
-  const currentTimestamp = timestamps.length > 0 ? timestamps[timestamps.length - 1] : null
-  const displayTimestamp = timestamps.length > guesses.length ? currentTimestamp : null
+  const [viewIndex, setViewIndex] = useState(0)
+
+  // Calculate max view index based on current game state
+  const maxViewIndex = gameState === 'PLAYING'
+    ? (timestamps.length > guesses.length ? timestamps.length - 1 : timestamps.length)
+    : Math.max(0, timestamps.length - 1)
+
+  // Snap to the latest slot when the user makes a guess or enters a timestamp
+  useEffect(() => {
+    setViewIndex(maxViewIndex)
+  }, [timestamps.length, guesses.length, gameState])
+
+  const displayTimestamp = viewIndex >= 0 && viewIndex < timestamps.length ? timestamps[viewIndex] : null
+  const isActiveSlot = viewIndex === maxViewIndex
+  const isTimestampDisabled = gameState !== 'PLAYING' || !isActiveSlot || (timestamps.length > guesses.length && !frameLoadError)
 
   // Answer state for game over
   const [answerData, setAnswerData] = useState(null)
@@ -160,16 +173,38 @@ export default function App() {
       <main className="flex-1 w-full max-w-4xl mx-auto p-4 md:p-6 flex flex-col justify-center">
 
         {/* Guesses Status */}
-        <div className="flex justify-center space-x-2 mb-6">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className={`h-2 w-12 rounded-full transition-colors ${i < guesses.length
-                ? (guesses[i].isCorrect ? 'bg-success' : 'bg-error')
-                : 'bg-surface border border-white/10'
-                }`}
-            />
-          ))}
+        <div className="flex justify-center items-center gap-4 mb-6">
+          <button 
+            onClick={() => setViewIndex(Math.max(0, viewIndex - 1))}
+            disabled={viewIndex <= 0}
+            className="p-1 text-white/50 hover:text-white disabled:opacity-20 disabled:hover:text-white/50 transition-colors"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+
+          <div className="flex space-x-2">
+            {[...Array(5)].map((_, i) => {
+              const isActive = i === viewIndex
+              return (
+                <div
+                  key={i}
+                  className={`h-2 w-12 rounded-full transition-all duration-300 ${
+                    i < guesses.length
+                      ? (guesses[i].isCorrect ? 'bg-success' : 'bg-error')
+                      : 'bg-surface border border-white/10'
+                  } ${isActive ? 'outline outline-2 outline-white/50 outline-offset-2 scale-110' : ''}`}
+                />
+              )
+            })}
+          </div>
+
+          <button 
+            onClick={() => setViewIndex(Math.min(maxViewIndex, viewIndex + 1))}
+            disabled={viewIndex >= maxViewIndex}
+            className="p-1 text-white/50 hover:text-white disabled:opacity-20 disabled:hover:text-white/50 transition-colors"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
         </div>
 
         {/* Cinematic Frame */}
@@ -187,7 +222,7 @@ export default function App() {
         <div className="space-y-4">
           <div className="flex flex-col gap-2">
             <Timestamp
-              valueSeconds={currentTimestamp}
+              valueSeconds={displayTimestamp}
               onChange={(val) => {
                 if (frameLoadError) {
                   replaceLastTimestamp(val)
@@ -196,7 +231,7 @@ export default function App() {
                   addTimestamp(val)
                 }
               }}
-              disabled={gameState !== 'PLAYING' || (timestamps.length > guesses.length && !frameLoadError)}
+              disabled={isTimestampDisabled}
               minSeconds={330} // Skip first 5:30 mins
               maxSeconds={(() => {
                 const rawRatio = gameInfo.frame_count / gameInfo.runtime_seconds
@@ -231,7 +266,7 @@ export default function App() {
 
           <GuessInput
             onSubmit={handleGuessSubmit}
-            disabled={gameState !== 'PLAYING'}
+            disabled={gameState !== 'PLAYING' || timestamps.length <= guesses.length || frameLoadError}
             isSubmitting={isSubmitting}
             guesses={guesses}
           />
@@ -243,7 +278,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="pb-4 text-center text-xs text-white/30 font-medium tracking-wide">
+      <footer className="fixed bottom-4 right-4 text-xs text-white/30 font-medium tracking-wide pointer-events-none z-50">
         created by seiji0z
       </footer>
 
