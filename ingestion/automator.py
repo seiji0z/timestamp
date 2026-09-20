@@ -115,6 +115,18 @@ def delete_yesterdays_frames(supabase, r2_client, bucket_name):
             
     print(f"Deleted {delete_count} frames from R2 for {r2_folder_name}.")
 
+def delete_old_telemetry(supabase):
+    print("\nChecking for old telemetry data to delete...")
+    # Delete telemetry records older than 3 days
+    three_days_ago = (date.today() - timedelta(days=3)).isoformat()
+    try:
+        response = supabase.table('game_telemetry').delete().lt('created_at', three_days_ago).execute()
+        # The Supabase Python client returns the deleted rows in response.data
+        deleted_count = len(response.data) if response.data else 0
+        print(f"Deleted {deleted_count} old telemetry records from before {three_days_ago}.")
+    except Exception as e:
+        print(f"Error deleting old telemetry: {e}")
+
 def schedule_tomorrows_game(supabase, bucket_name):
     print("\nScheduling tomorrow's game...")
     tomorrow = (date.today() + timedelta(days=0)).isoformat()
@@ -219,6 +231,7 @@ def main():
         raise ValueError("Missing CLOUDFLARE_R2_BUCKET_NAME")
 
     delete_yesterdays_frames(supabase, r2_client, bucket_name)
+    delete_old_telemetry(supabase)
     schedule_tomorrows_game(supabase, bucket_name)
 
 if __name__ == "__main__":
