@@ -18,8 +18,9 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
     setInputValue(`${h}:${m}:${s}`)
   }, [valueSeconds])
 
-  const handleBlur = (e) => {
-    let val = e.target.value.trim()
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault()
+    let val = inputValue.trim()
     if (!val) return
 
     // Parse MM:SS or HH:MM:SS
@@ -46,17 +47,16 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
     if (onChange && seconds !== valueSeconds) {
       onChange(seconds)
     }
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleBlur(e)
+    
+    // Unfocus the input after submission
+    if (document.activeElement && document.activeElement.blur) {
+      document.activeElement.blur()
     }
   }
 
   return (
     <div className="relative w-full max-w-sm mx-auto">
-      <div className="relative">
+      <form onSubmit={handleSubmit} className="relative">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <Clock className="h-5 w-5 text-white/40" />
         </div>
@@ -66,11 +66,13 @@ export default function Timestamp({ valueSeconds, onChange, disabled, minSeconds
           className="w-full bg-surface/50 border border-white/10 rounded-lg py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-[#E50914] focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           placeholder="HH:MM:SS (e.g. 01:15:30)"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
+          onChange={(e) => {
+            const cleanValue = e.target.value.replace(/[^0-9:]/g, '')
+            setInputValue(cleanValue)
+          }}
+          onBlur={() => handleSubmit()}
         />
-      </div>
+      </form>
     </div>
   )
 }
