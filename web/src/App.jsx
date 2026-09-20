@@ -6,8 +6,10 @@ import GuessInput from './components/GuessInput'
 import ShareStats from './components/ShareStats'
 import Modal from './components/Modal'
 import Hints from './components/Hints'
-import { getTodayGame, submitGuess, revealAnswer, getTmdbPoster, getHints } from './services/api'
+import { getTodayGame, submitGuess, revealAnswer, getTmdbPoster, getHints, submitTelemetry, getGlobalStats } from './services/api'
 import { useGameLogic } from './hooks/useGameLogic'
+import { useStats } from './hooks/useStats'
+import StatsDisplay from './components/StatsDisplay'
 
 export default function App() {
   const [gameInfo, setGameInfo] = useState(null)
@@ -16,9 +18,11 @@ export default function App() {
   const [showModal, setShowModal] = useState(false)
   const [frameLoadError, setFrameLoadError] = useState(false)
   const [shakeError, setShakeError] = useState(false)
+  const [globalStats, setGlobalStats] = useState(null)
 
   // Game state stored in localStorage
   const { guesses, timestamps, gameState, addGuess, addTimestamp, replaceLastTimestamp } = useGameLogic(gameInfo?.game_id)
+  const { stats, recordGameResult } = useStats()
 
   const currentTimestamp = timestamps.length > 0 ? timestamps[timestamps.length - 1] : null
   const displayTimestamp = timestamps.length > guesses.length ? currentTimestamp : null
@@ -66,6 +70,29 @@ export default function App() {
       })
     }
   }, [guesses.length, gameInfo])
+
+  // Handle game end: save local stats and fetch global telemetry
+  useEffect(() => {
+    if (gameInfo && (gameState === 'WON' || gameState === 'LOST')) {
+      const isWin = gameState === 'WON'
+      const finalGuessCount = isWin ? guesses.length : 6
+
+      // Local Stats
+      recordGameResult(gameInfo.game_id, gameInfo.game_date, isWin, finalGuessCount)
+
+      // Global Telemetry
+      const submitAndFetch = async () => {
+        const telemetryFlag = `framedle_telemetry_${gameInfo.game_id}`
+        if (!localStorage.getItem(telemetryFlag)) {
+          await submitTelemetry(gameInfo.game_id, finalGuessCount)
+          localStorage.setItem(telemetryFlag, 'true')
+        }
+        const gStats = await getGlobalStats(gameInfo.game_id)
+        setGlobalStats(gStats)
+      }
+      submitAndFetch()
+    }
+  }, [gameState, gameInfo]) // Only triggers when gameState changes
 
   const handleGuessSubmit = async (guessTitle) => {
     setIsSubmitting(true)
@@ -237,17 +264,19 @@ export default function App() {
             </p>
           </div>
         ) : (
-          <div className="space-y-6 text-center pt-2">
+          <div className="space-y-4 text-center">
 
             {/* The Answer Reveal */}
             {answerData && (
-              <div className="flex flex-col items-center justify-center mb-6 p-4 bg-surface/50 rounded-xl border border-white/5">
-                <p className="text-sm text-white/50 mb-3 uppercase tracking-widest">Today's Movie</p>
+              <div className="flex flex-row items-center justify-center gap-4 mb-2 p-3 bg-surface/50 rounded-xl border border-white/5 mx-auto max-w-sm">
                 {answerPoster && (
-                  <img src={answerPoster} alt={answerData.title} className="w-32 h-48 object-cover rounded shadow-lg mb-4" />
+                  <img src={answerPoster} alt={answerData.title} className="w-16 h-24 object-cover rounded shadow-md" />
                 )}
-                <h2 className="text-2xl font-bold text-white">{answerData.title}</h2>
-                <p className="text-white/50">{answerData.release_year}</p>
+                <div className="flex flex-col text-left">
+                  <p className="text-[10px] text-white/50 mb-1 uppercase tracking-widest">Today's Movie</p>
+                  <h2 className="text-xl font-bold text-white leading-tight">{answerData.title}</h2>
+                  <p className="text-white/50 text-sm mt-1">{answerData.release_year}</p>
+                </div>
               </div>
             )}
 
@@ -257,11 +286,18 @@ export default function App() {
                 : 'Better luck next time!'}
             </p>
 
+            <StatsDisplay 
+              stats={stats} 
+              globalStats={globalStats} 
+              gameState={gameState} 
+              guesses={guesses} 
+            />
+
             <div>
               <ShareStats guesses={guesses} gameState={gameState} />
             </div>
 
-            <p className="text-sm text-white/50 border-t border-white/10 pt-5 mt-2 font-medium">
+            <p className="text-xs text-white/50 border-t border-white/10 pt-4 mt-2 font-medium">
               A new movie is selected every day at Midnight UTC. Come back tomorrow!
             </p>
           </div>

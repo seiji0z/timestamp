@@ -75,3 +75,19 @@ export async function getHints(gameId, guessCount) {
   }
   return data
 }
+
+export async function submitTelemetry(gameId, guessCount) {
+  const { error } = await supabase.rpc('submit_telemetry', { p_game_id: gameId, p_guess_count: guessCount })
+  if (error) {
+    console.error('Error submitting telemetry:', error)
+  }
+}
+
+export async function getGlobalStats(gameId) {
+  const { data, error } = await supabase.rpc('get_global_stats', { p_game_id: gameId })
+  if (error) {
+    console.error('Error fetching global stats:', error)
+    return null
+  }
+  return data
+}
