@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Share2, Check } from 'lucide-react'
 
-export default function ShareStats({ guesses, gameState }) {
+export default function ShareStats({ guesses, gameState, gameDate }) {
   const [copied, setCopied] = useState(false)
 
   const handleShare = () => {
@@ -16,7 +16,13 @@ export default function ShareStats({ guesses, gameState }) {
       }
     }
 
-    const text = `timestamp!\n${grid}\nPlay at https://seiji0z.github.io/timestamp/!`
+    // Format date
+    const formattedDate = gameDate
+      ? new Date(gameDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : ''
+
+    const dateHeader = formattedDate ? ` - ${formattedDate}` : ''
+    const text = `timestamp!${dateHeader}\n${grid}\nPlay at https://seiji0z.github.io/timestamp/!`
 
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true)

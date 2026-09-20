@@ -343,7 +343,7 @@ export default function App() {
             />
 
             <div>
-              <ShareStats guesses={guesses} gameState={gameState} />
+              <ShareStats guesses={guesses} gameState={gameState} gameDate={gameInfo?.game_date} />
             </div>
 
             <p className="text-xs text-white/50 border-t border-white/10 pt-4 mt-2 font-medium">
