@@ -133,7 +133,10 @@ export default function App() {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6">
         <img src={`${import.meta.env.BASE_URL}logo.png`} alt="timestamp! Logo" className="h-20 w-20 object-contain animate-pulse" />
-        <h1 className="text-3xl font-bold tracking-tight font-gilroy text-[#FAF9F6]">timestamp!</h1>
+        <div className="flex flex-col items-center">
+          <h1 className="text-3xl font-bold tracking-tight font-gilroy text-[#FAF9F6] leading-none">timestamp!</h1>
+          <span className="text-[10px] font-medium text-white/40 uppercase tracking-widest mt-2">a movie guessing game</span>
+        </div>
         <div className="w-8 h-8 border-4 border-[#E50914] border-t-transparent rounded-full animate-spin"></div>
       </div>
     )
@@ -148,7 +151,7 @@ export default function App() {
   }
 
   return (
-    <div 
+    <div
       className={`min-h-screen bg-background text-white flex flex-col font-sans transition-all overflow-x-hidden ${shakeError ? 'animate-error-shake' : ''}`}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -157,7 +160,10 @@ export default function App() {
       <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}logo.png`} alt="timestamp! Logo" className="h-8 w-8 object-contain" />
-          <h1 className="text-2xl font-bold tracking-tight font-gilroy text-[#FAF9F6]">timestamp!</h1>
+          <div className="flex flex-col">
+            <h1 className="text-2xl font-bold tracking-tight font-gilroy text-[#FAF9F6] leading-none">timestamp!</h1>
+            <span className="text-[12px] font-medium text-white/40 tracking-tight mt-0">a movie guessing game</span>
+          </div>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -174,7 +180,7 @@ export default function App() {
 
         {/* Guesses Status */}
         <div className="flex justify-center items-center gap-4 mb-6">
-          <button 
+          <button
             onClick={() => setViewIndex(Math.max(0, viewIndex - 1))}
             disabled={viewIndex <= 0}
             className="p-1 text-white/50 hover:text-white disabled:opacity-20 disabled:hover:text-white/50 transition-colors"
@@ -188,17 +194,16 @@ export default function App() {
               return (
                 <div
                   key={i}
-                  className={`h-2 w-12 rounded-full transition-all duration-300 ${
-                    i < guesses.length
-                      ? (guesses[i].isCorrect ? 'bg-success' : 'bg-error')
-                      : 'bg-surface border border-white/10'
-                  } ${isActive ? 'outline outline-2 outline-white/50 outline-offset-2 scale-110' : ''}`}
+                  className={`h-2 w-12 rounded-full transition-all duration-300 ${i < guesses.length
+                    ? (guesses[i].isCorrect ? 'bg-success' : 'bg-error')
+                    : 'bg-surface border border-white/10'
+                    } ${isActive ? 'outline outline-2 outline-white/50 outline-offset-2 scale-110' : ''}`}
                 />
               )
             })}
           </div>
 
-          <button 
+          <button
             onClick={() => setViewIndex(Math.min(maxViewIndex, viewIndex + 1))}
             disabled={viewIndex >= maxViewIndex}
             className="p-1 text-white/50 hover:text-white disabled:opacity-20 disabled:hover:text-white/50 transition-colors"
@@ -330,11 +335,11 @@ export default function App() {
                 : 'Better luck next time!'}
             </p>
 
-            <StatsDisplay 
-              stats={stats} 
-              globalStats={globalStats} 
-              gameState={gameState} 
-              guesses={guesses} 
+            <StatsDisplay
+              stats={stats}
+              globalStats={globalStats}
+              gameState={gameState}
+              guesses={guesses}
             />
 
             <div>
