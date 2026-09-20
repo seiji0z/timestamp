@@ -15,7 +15,7 @@ def get_movie_metadata(title, year):
     """Fetch the actual movie runtime, genre, and director from TMDB."""
     api_key = os.environ.get("VITE_TMDB_API_KEY") 
     if not api_key:
-        return 7200, None, None # Fallback to 2 hours
+        return 7200, None, None, False # Fallback to 2 hours
     try:
         query = urllib.parse.quote(title)
         res = requests.get(f"https://api.themoviedb.org/3/search/movie?api_key={api_key}&query={query}&primary_release_year={year}")
@@ -48,11 +48,11 @@ def get_movie_metadata(title, year):
                     director = crew_member.get('name')
                     break
                     
-            return runtime, genre_str, director
+            return runtime, genre_str, director, True
     except Exception as e:
         print(f"Error fetching metadata from TMDB: {e}")
     print("WARNING: Falling back to 7200 seconds for runtime! Timestamps will drift if this is incorrect.")
-    return 7200, None, None
+    return 7200, None, None, False
 
 def get_supabase_client() -> Client:
     url = os.environ.get("SUPABASE_URL")
@@ -157,17 +157,22 @@ def schedule_tomorrows_game(supabase, bucket_name):
         max_timestamp = scrape_movie_frames(selected_movie['url'], temp_workspace, skip_interval=50)
         
         # Get real runtime and metadata from TMDB
-        real_runtime, genre, director = get_movie_metadata(selected_movie['title'], selected_movie['release_year'])
+        real_runtime, genre, director, tmdb_success = get_movie_metadata(selected_movie['title'], selected_movie['release_year'])
         
         # Update the database with real time and frame metrics
-        print(f"Updating movie: real runtime {real_runtime}s, frame_count {max_timestamp}, genre {genre}, director {director}.")
-        supabase.table('movies').update({
-            'runtime_seconds': real_runtime,
+        update_payload = {
             'frame_count': max_timestamp,
-            'frame_interval': 50,
-            'genre': genre,
-            'director': director
-        }).eq('id', selected_movie['id']).execute()
+            'frame_interval': 50
+        }
+        if tmdb_success:
+            update_payload['runtime_seconds'] = real_runtime
+        if genre:
+            update_payload['genre'] = genre
+        if director:
+            update_payload['director'] = director
+            
+        print(f"Updating movie payload: {update_payload}")
+        supabase.table('movies').update(update_payload).eq('id', selected_movie['id']).execute()
         
         # Delete spoiler frames (first 5 mins, last 10 mins) locally before uploading to R2
         # Must convert the real time (300 seconds) to the frame index to delete
