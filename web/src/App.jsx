@@ -135,7 +135,10 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen bg-background text-white flex flex-col font-sans transition-all overflow-x-hidden ${shakeError ? 'animate-error-shake' : ''}`}>
+    <div 
+      className={`min-h-screen bg-background text-white flex flex-col font-sans transition-all overflow-x-hidden ${shakeError ? 'animate-error-shake' : ''}`}
+      onContextMenu={(e) => e.preventDefault()}
+    >
 
       {/* Header */}
       <header className="flex-none p-4 md:p-6 flex items-center justify-between border-b border-white/5 backdrop-blur-md sticky top-0 z-10">
@@ -252,7 +255,13 @@ export default function App() {
       >
         {gameState === 'PLAYING' ? (
           <div className="space-y-4 text-white/80 leading-relaxed">
-            <p>1. Type a timestamp (HH:MM:SS) to jump around the movie. The earliest you can start is 00:05:30 to avoid early title screens. If you enter a time lower than 5:30, it will automatically default to 5:30.</p>
+            <div className="mb-2">
+              <p>1. Type a timestamp (HH:MM:SS) to jump around the movie.</p>
+              <ul className="list-[lower-alpha] pl-6 mt-1 space-y-1 text-sm text-white/70">
+                <li>To avoid early title screens, the earliest you can start is 00:05:30. Earlier times will default to 5:30.</li>
+                <li>To avoid end credits, times entered beyond the movie's end will automatically default to the final playable frame.</li>
+              </ul>
+            </div>
             <p>2. Look at the frame shown at your chosen time and try to guess the movie title.</p>
             <p>3. You have 5 guesses. Use the autocomplete to find valid movies.</p>
             <div className="bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-3 rounded-lg text-sm mt-2">

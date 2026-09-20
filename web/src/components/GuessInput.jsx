@@ -148,7 +148,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
       </form>
 
       {errorMsg && (
-        <div className="absolute top-full mt-2 w-full text-center text-error text-sm font-medium animate-pulse">
+        <div className="absolute right-16 top-1/2 -translate-y-1/2 text-[#E50914] text-sm font-bold animate-pulse pointer-events-none bg-gradient-to-l from-surface via-surface to-transparent pl-8 py-2 pr-2">
           {errorMsg}
         </div>
       )}
