@@ -55,7 +55,7 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
     const guessedTitles = guesses.map(g => g.title.toLowerCase())
     const matches = catalog
       .filter(m => m.title.toLowerCase().includes(lowerQuery) && !guessedTitles.includes(m.title.toLowerCase()))
-      .slice(0, 5) // Show top 5 matches
+      .slice(0, 10) // Show top 10 matches
 
     setSuggestions(matches)
     setFocusedIndex(-1) // reset focus when suggestions change
@@ -119,10 +119,22 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
             if (e.key === 'ArrowDown') {
               e.preventDefault()
               if (!showDropdown) setShowDropdown(true)
-              setFocusedIndex(prev => Math.min(prev + 1, suggestions.length - 1))
+              setFocusedIndex(prev => {
+                const next = Math.min(prev + 1, suggestions.length - 1)
+                const el = document.getElementById(`suggestion-${next}`)
+                if (el) el.scrollIntoView({ block: 'nearest' })
+                return next
+              })
             } else if (e.key === 'ArrowUp') {
               e.preventDefault()
-              setFocusedIndex(prev => Math.max(prev - 1, -1))
+              setFocusedIndex(prev => {
+                const next = Math.max(prev - 1, -1)
+                if (next >= 0) {
+                  const el = document.getElementById(`suggestion-${next}`)
+                  if (el) el.scrollIntoView({ block: 'nearest' })
+                }
+                return next
+              })
             } else if (e.key === 'Enter') {
               if (showDropdown && focusedIndex >= 0 && suggestions[focusedIndex]) {
                 e.preventDefault()
@@ -155,10 +167,11 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
 
       {/* Autocomplete Dropdown */}
       {showDropdown && suggestions.length > 0 && (
-        <div className={`absolute ${dropdownPos === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 right-0 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50 divide-y divide-white/5`}>
+        <div className={`absolute ${dropdownPos === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} left-0 right-0 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 divide-y divide-white/5 max-h-[400px] overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full`}>
           {suggestions.map((movie, index) => (
             <div
               key={movie.id}
+              id={`suggestion-${index}`}
               onClick={() => handleSelect(movie)}
               className={`flex items-center gap-4 p-3 cursor-pointer transition-colors ${
                 focusedIndex === index ? 'bg-white/20' : 'hover:bg-white/10'
