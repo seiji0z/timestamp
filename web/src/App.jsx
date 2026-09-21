@@ -283,8 +283,16 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-4 right-4 text-xs text-white/30 font-medium tracking-wide pointer-events-none z-50">
-        created by seiji0z
+      <footer className="fixed bottom-4 left-4 right-4 flex justify-between text-xs text-white/30 font-medium tracking-wide z-50">
+        <a 
+          href="https://forms.gle/ty95VkiHiAi9z9TS7" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="hover:text-white/70 transition-colors pointer-events-auto"
+        >
+          bugs? suggestions?
+        </a>
+        <span className="pointer-events-none">created by seiji0z</span>
       </footer>
 
       {/* Game Over / Info Modal */}

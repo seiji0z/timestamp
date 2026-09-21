@@ -173,9 +173,8 @@ export default function GuessInput({ onSubmit, disabled, isSubmitting, guesses =
               key={movie.id}
               id={`suggestion-${index}`}
               onClick={() => handleSelect(movie)}
-              className={`flex items-center gap-4 p-3 cursor-pointer transition-colors ${
-                focusedIndex === index ? 'bg-white/20' : 'hover:bg-white/10'
-              }`}
+              className={`flex items-center gap-4 p-3 cursor-pointer transition-colors ${focusedIndex === index ? 'bg-white/20' : 'hover:bg-white/10'
+                }`}
             >
               <div className="w-10 h-14 bg-black rounded shrink-0 overflow-hidden shadow">
                 {posters[movie.id] ? (
