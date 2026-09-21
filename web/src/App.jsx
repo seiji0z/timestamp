@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import ReactGA from 'react-ga4'
 import { Info, ChevronLeft, ChevronRight } from 'lucide-react'
 import ImageView from './components/ImageView'
 import Timestamp from './components/Timestamp'
@@ -112,16 +113,16 @@ export default function App() {
     const isCorrect = await submitGuess(gameInfo.game_id, guessTitle)
     setIsSubmitting(false)
 
-    if (!isCorrect && !gameState === 'WON') {
-      setShakeError(true)
-      setTimeout(() => setShakeError(false), 500)
-    } else if (!isCorrect && guesses.length < 5) {
-      setShakeError(true)
-      setTimeout(() => setShakeError(false), 500)
-    }
-
     addGuess(guessTitle, isCorrect)
     setFrameLoadError(false) // reset error on new guess round
+
+    if (isCorrect) {
+      ReactGA.event({ category: "Game", action: "Win", value: guesses.length + 1 })
+    } else if (guesses.length === 4) {
+      ReactGA.event({ category: "Game", action: "Lose" })
+    } else {
+      ReactGA.event({ category: "Game", action: "Guess Submitted", label: guessTitle })
+    }
 
     // Automatically show modal if game ends after this guess
     if (isCorrect || guesses.length === 4) { // 4 because state hasn't updated to 5 yet
