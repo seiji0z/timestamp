@@ -129,7 +129,7 @@ def delete_old_telemetry(supabase):
 
 def schedule_tomorrows_game(supabase, bucket_name):
     print("\nScheduling tomorrow's game...")
-    tomorrow = (date.today() + timedelta(days=0)).isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
     
     # Check if tomorrow already exists
     existing = supabase.table('daily_games').select('id').eq('game_date', tomorrow).execute()
