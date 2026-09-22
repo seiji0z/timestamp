@@ -113,6 +113,11 @@ export default function App() {
     const isCorrect = await submitGuess(gameInfo.game_id, guessTitle)
     setIsSubmitting(false)
 
+    if (!isCorrect) {
+      setShakeError(true)
+      setTimeout(() => setShakeError(false), 500)
+    }
+
     addGuess(guessTitle, isCorrect)
     setFrameLoadError(false) // reset error on new guess round
 
