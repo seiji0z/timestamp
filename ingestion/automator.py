@@ -221,11 +221,11 @@ def schedule_tomorrows_game(supabase, bucket_name):
         
         print("Inserting game into Supabase...")
         supabase.table('daily_games').insert({
-            'game_date': tomorrow,
+            'game_date': next_game_date,
             'movie_id': selected_movie['id']
         }).execute()
         
-        print(f"Successfully scheduled {selected_movie['title']} for {tomorrow}!")
+        print(f"Successfully scheduled {selected_movie['title']} for {next_game_date}!")
         
     finally:
         if os.path.exists(temp_workspace):
