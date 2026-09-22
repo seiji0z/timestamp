@@ -29,15 +29,31 @@ export async function submitGuess(gameId, guessTitle) {
 }
 
 export async function fetchMovieCatalog() {
-  const { data, error } = await supabase
-    .from('public_movie_catalog')
-    .select('*')
-  
-  if (error) {
-    console.error('Error fetching catalog:', error)
-    return []
+  let allData = []
+  let from = 0
+  const step = 1000
+  let hasMore = true
+
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from('public_movie_catalog')
+      .select('*')
+      .range(from, from + step - 1)
+    
+    if (error) {
+      console.error('Error fetching catalog:', error)
+      return allData
+    }
+    
+    allData = [...allData, ...data]
+    if (data.length < step) {
+      hasMore = false
+    } else {
+      from += step
+    }
   }
-  return data
+  
+  return allData
 }
 
 export async function revealAnswer() {
