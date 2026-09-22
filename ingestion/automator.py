@@ -128,13 +128,24 @@ def delete_old_telemetry(supabase):
         print(f"Error deleting old telemetry: {e}")
 
 def schedule_tomorrows_game(supabase, bucket_name):
-    print("\nScheduling tomorrow's game...")
-    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+    print("\nScheduling the next game...")
     
-    # Check if tomorrow already exists
-    existing = supabase.table('daily_games').select('id').eq('game_date', tomorrow).execute()
+    # Get the latest game date from the database
+    latest_game_resp = supabase.table('daily_games').select('game_date').order('game_date', desc=True).limit(1).execute()
+    
+    if latest_game_resp.data:
+        latest_date_str = latest_game_resp.data[0]['game_date']
+        next_game_date = (date.fromisoformat(latest_date_str) + timedelta(days=1)).isoformat()
+    else:
+        # If no games exist at all, start with today
+        next_game_date = date.today().isoformat()
+        
+    print(f"Target date for next game: {next_game_date}")
+    
+    # Check if next_game_date already exists 
+    existing = supabase.table('daily_games').select('id').eq('game_date', next_game_date).execute()
     if existing.data:
-        print(f"Game for tomorrow ({tomorrow}) is already scheduled. Skipping.")
+        print(f"Game for {next_game_date} is already scheduled. Skipping.")
         return
         
     # Get all used movie_ids
