@@ -46,21 +46,41 @@ export default function App() {
   const [answerPoster, setAnswerPoster] = useState(null)
   const [hints, setHints] = useState({})
 
-  // Fetch today's game on mount
+  // Fetch today's game on mount and when tab becomes visible
   useEffect(() => {
     async function loadGame() {
       const info = await getTodayGame()
       if (info) {
-        setGameInfo(info)
-        // If not playing (won/lost), show the end modal immediately on load
-        if (gameState !== 'PLAYING') {
-          setShowModal(true)
-        }
+        setGameInfo(prev => {
+          if (prev && prev.game_id !== info.game_id) {
+            // Day rolled over while tab was open, reload to get fresh state
+            window.location.reload()
+            return prev
+          }
+          return info
+        })
       }
       setLoading(false)
     }
+    
     loadGame()
-  }, [gameState, guesses.length])
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        loadGame()
+      }
+    }
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange)
+  }, [])
+
+  // Show modal if game is already over on load or when game ends
+  useEffect(() => {
+    if (gameInfo && gameState !== 'PLAYING') {
+      setShowModal(true)
+    }
+  }, [gameState, gameInfo])
 
   // Fetch answer when game is over
   useEffect(() => {
